@@ -1,6 +1,7 @@
 from aiogram_dialog import Dialog, DialogManager, StartMode, Window, setup_dialogs
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Button, Row, Column
+from aiogram.types import Message, User
 from aiogram_dialog.widgets.input import TextInput, ManagedTextInput
 from aiogram_dialog.widgets.media import StaticMedia
 from aiogram.types import ContentType, CallbackQuery, Message
@@ -11,8 +12,10 @@ from app import cryptopay
 import asyncio
 from app.database import requests
 from main import bot
+import random
 
 bot = bot
+current_stavka = 10
 
 start_message = '''
 👋 Привет <b>{username}</b>!
@@ -31,6 +34,9 @@ async def start_menu(callback: CallbackQuery, button: Button, dialog_manager: Di
 
 async def to_profile(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     await dialog_manager.start(state=states.ProfileSG.profile)
+
+async def to_bet(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    await dialog_manager.start(state=states.StavkaSG.home)
 
 async def to_menu(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     await dialog_manager.start(state=states.MenuSG.menu)
@@ -103,10 +109,16 @@ async def subscribe5_handler(callback: CallbackQuery, widget: ManagedTextInput, 
         await callback.message.answer("Недостаточно средств на балансе!")
     await dialog_manager.start(state=states.SubscribeSG.subscribe)
 
-async def stavka_handler(callback: CallbackQuery, widget: ManagedTextInput, dialog_manager: DialogManager):
-    await dialog_manager.start(states.ShowStavkaSG.show_stavka, data = {
-        'comand_1': 'Команда 1'
-    })
+async def stavka_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    subscribe = await requests.check_subscribe(callback.from_user.id)
+    if subscribe <= 0:
+        await callback.message.answer("<b>У вас нету активной подписки!</b>")
+        await dialog_manager.start(states.StavkaSG.home)
+    else:
+        await requests.remove_subscribe(callback.from_user.id, 1)
+        stavka_id = button.widget_id  # Извлекаем ID ставки из ID кнопки
+        await requests.set_stavka(callback.from_user.id, stavka_id)
+        await dialog_manager.start(states.ShowStavkaSG.show_stavka)
 
 start_dialog = Dialog(
     Window(
@@ -142,7 +154,7 @@ menu_dialog = Dialog(
 
 profile_dialog = Dialog(
     Window(
-        StaticMedia(path='menu.jpg', type=ContentType.PHOTO),
+        StaticMedia(path='profile.jpg', type=ContentType.PHOTO),
         Format(text='👤 <b>{username}</b>'),
         Format(text='⭐️ ID: <b>{id}</b>'),
         Format(text='🎟 Подписка: <b>{subscribe}</b> игр'),
@@ -219,21 +231,71 @@ to_subscribe_dialog = Dialog(
 )
 
 
+def create_stavka_buttons(stavki:dict):
+    print(stavki)
+    buttons = []
+    i = 0
+    for stavka in stavki['stavki']:
+        i += 1
+        buttons.append(
+            Button(
+                Format(f"{stavka['detail']}"),  # Динамическое название кнопки
+                id=f"{stavka['id']}",  # Уникальный ID кнопки для каждой ставки
+                on_click=stavka_handler  # Хендлер, который будет обрабатывать нажатие
+            )
+        )
+    return buttons
+
 
 home_dialog = Dialog(
     Window(
         StaticMedia(path='bet.jpg', type=ContentType.PHOTO),
-        Button(Format('{stavka_1}'), id='subscribe_5', on_click=stavka_handler),
-        getter=getters.user_getter,
-        state = states.StavkaSG.home
+        Column(
+            # Используем данные, полученные через getter для создания кнопок
+            *create_stavka_buttons(getters.stavki_getter())
+        ),
+        Button(Const('◀️ Назад'),id='back',on_click=to_menu),
+        state=states.StavkaSG.home
     )
 )
 
 
+async def stavka_getter_by_id(dialog_manager: DialogManager, event_from_user: User,**kwargs):
+        match_id = await requests.get_stavka(event_from_user.id)
+        matches = getters.stavki_getter()['stavki']
+        result = {
+
+        }
+        chances = [
+            20,30,40,50,60,70,80,90
+        ]
+        for match in matches:
+            if match['id'] == match_id:
+                result['match'] = match['detail']
+                result['comand_1'] = match['detail'].split('-')[0]
+                result['comand_2'] = match['detail'].split('-')[1]
+                chance1 = chances[random.randint(0,7)]
+                chance2 = 100 - chance1
+                result['chance1'] = chance1
+                result['chance2'] = chance2
+
+                if chance1 > chance2:
+                    result['final'] = f'Мы рекомендуем ставить на {match['detail'].split('-')[0]}!'
+                else:
+                    result['final'] = f'Мы рекомендуем ставить на {match['detail'].split('-')[1]}!'
+        return result
+
+        
+
 show_stavka_dialog = Dialog(
     Window(
-        Format('Команда_1: {comand_1}'),
-        Format('Команда_2:'),
-        state = states.ShowStavkaSG.show_stavka
+        Format('Матч: <b>{match}</b>'),
+        Const('*******************************'),
+        Format('Команда 1: {comand_1}, шанс победы: {chance1}'),                                        
+        Format('Команда 2: {comand_2}, шанс победы: {chance2}'),
+        Format('{final}'),
+        Button(Const('◀️ Назад'),id='back',on_click=to_bet),
+        state=states.ShowStavkaSG.show_stavka,
+        getter=stavka_getter_by_id
     )
 )

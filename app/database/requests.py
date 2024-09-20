@@ -4,9 +4,22 @@ from sqlalchemy import select
 
 async def create_user(telegram_id):
     async with async_session() as session:
-        session.add(User(telegram_id=telegram_id, balance = 0, subscribe = 0))
+        session.add(User(telegram_id=telegram_id, balance = 0, subscribe = 0, current_stavka = 0))
         await session.commit()
 
+
+async def set_stavka(telegram_id, stavka):
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.telegram_id == telegram_id))
+        user.current_stavka = stavka
+        await session.commit()
+
+
+async def get_stavka(telegram_id):
+    async with async_session() as session:
+        print(f"ID: {telegram_id}")
+        user = await session.scalar(select(User).where(User.telegram_id == str(telegram_id)))
+        return user.current_stavka
 
 async def check_user(telegram_id):
     async with async_session() as session:

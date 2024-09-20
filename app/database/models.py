@@ -17,6 +17,7 @@ class User(Base):
     telegram_id = Column(String)
     balance = Column(Float)
     subscribe = Column(Integer)
+    current_stavka = Column(Integer)
 
 
 
