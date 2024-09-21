@@ -2,6 +2,19 @@ from app.database.models import async_session, User
 from sqlalchemy import select
 
 
+async def add_promocode(telegram_id: str, promocode: str):
+    async with async_session() as session:
+        session.add(Promocode(telegram_id = telegram_id, promocode = promocode))
+        await session.commit()
+
+async def check_promocode(telegram_id: str, promocode: str):
+    async with async_session() as session:
+        promo = await session.scalar(select(Promocode).where(Promocode.telegram_id == telegram_id and Promocode.promocode == promocode))
+        if promo:
+            return True
+        else:
+            return False
+
 async def create_user(telegram_id):
     async with async_session() as session:
         session.add(User(telegram_id=telegram_id, balance = 0, subscribe = 0, current_stavka = 0))

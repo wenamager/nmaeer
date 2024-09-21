@@ -72,9 +72,34 @@ async def add_balance_handler(message: Message, widget: ManagedTextInput, dialog
     await dialog_manager.start(state=states.BalanceSG.pull_balance)
 
     
+promocodes_1 = ['xYzQpRt', 'aBcDrLM', 'jKlMnOp', 'qRsTuVw', 'zXyAbCd', 'pQrStUv', 'mNoPqRs', 'eFgHiJk', 'tUvWxYz', 'aBcDsKl']
+promocodes_3 = ['kLmNoPq', 'rStUvWx', 'xYzAbCd', 'jKlMKTy', 'pQrQoBa', 'eFgTcHk', 'tUvFgKla', 'aBcDaSm', 'mNoGkLw', 'qRsTDfg']
+promocodes_5 = ['zXyAbCd', 'kLmGep', 'rStUQdh', 'xYzMNt', 'jKlMGnM', 'pQrStUv', 'eFgMeHT', 'tUvQjLaS', 'aBcKoP', 'mNoPbWk']
 async def check_promo_handler(message: Message, widget: ManagedTextInput, dialog_manager: DialogManager, text: str):
-    if text == 'promocode':
-        await message.answer("Вы ввели промокод!")
+    if text in promocodes_1:
+        is_activated = await requests.check_promocode(message.from_user.id, text)
+        if is_activated:
+            await message.answer("Вы уже ввели данный промокод!")
+            return
+        await requests.add_promocode(message.from_user.id, text)
+        await requests.add_subscribe(message.from_user.id, 1)
+        await message.answer("<b>Вы получили 1 бесплатную игру!</b>")
+    elif text in promocodes_3:
+        is_activated = await requests.check_promocode(message.from_user.id, text)
+        if is_activated:
+            await message.answer("Вы уже ввели данный промокод!")
+            return
+        await requests.add_promocode(message.from_user.id, text)
+        await requests.add_subscribe(message.from_user.id, 3)
+        await message.answer("<b>Вы получили 3 бесплатных игр!</b>")
+    elif text in promocodes_5:
+        is_activated = await requests.check_promocode(message.from_user.id, text)
+        if is_activated:
+            await message.answer("Вы уже ввели данный промокод!")
+            return
+        await requests.add_promocode(message.from_user.id, text)
+        await requests.add_subscribe(message.from_user.id, 5)
+        await message.answer("<b>Вы получили 5 бесплатных игр!</b>")
     else:
         await message.answer('Такого промокода нет!.')
     await dialog_manager.start(state=states.PromoSG.promo)
