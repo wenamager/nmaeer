@@ -7,9 +7,10 @@ from app import states
 from app.handlers import user_router
 from app import dialogs
 from app.database.models import init_models
+import config
 
 
-bot = Bot('7047637117:AAExkCDwjhQKk9IVVDCgUmPEBreQ0R1VcV8', default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(config.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
 
