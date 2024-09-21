@@ -1,4 +1,4 @@
-from app.database.models import async_session, User
+from app.database.models import async_session, User, Promocode
 from sqlalchemy import select
 
 
@@ -9,8 +9,9 @@ async def add_promocode(telegram_id: str, promocode: str):
 
 async def check_promocode(telegram_id: str, promocode: str):
     async with async_session() as session:
-        promo = await session.scalar(select(Promocode).where(Promocode.telegram_id == telegram_id and Promocode.promocode == promocode))
+        promo = await session.scalar(select(Promocode).where(Promocode.promocode == promocode and Promocode.telegram_id == telegram_id))
         if promo:
+            print(f"PROMOCODE : {promo.promocode}")
             return True
         else:
             return False
