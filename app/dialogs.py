@@ -192,7 +192,7 @@ pull_balance_dialog = Dialog(
 
 help_dialog = Dialog (
     Window(
-        Const(text='Поддержка: @wenaxera'),
+        Const(text='По любым вопросам пишите в поддержку.\n<b>Поддержка:</b> @nmaeers'),
         Button(Const('◀️ Назад'),id='back',on_click=to_menu,),
         state=states.HelpSG.help
     ),
@@ -267,33 +267,45 @@ async def stavka_getter_by_id(dialog_manager: DialogManager, event_from_user: Us
 
         }
         chances = [
-            20,30,40,50,60,70,80,90
+            20,30,40,60,70,80,90
         ]
         for match in matches:
             if match['id'] == match_id:
                 result['match'] = match['detail']
-                result['comand_1'] = match['detail'].split('-')[0]
-                result['comand_2'] = match['detail'].split('-')[1]
-                chance1 = chances[random.randint(0,7)]
+                comand_1 = match['detail'].split('-')[0]
+                comand_2 = match['detail'].split('-')[1]
+                if len(comand_1) > len(comand_2):
+                    comand_1 = comand_1.split(' ')
+                    print(f"SPLITTED : {comand_1}")
+                    if len(comand_1[len(comand_1)-1]) <= 1:
+                        comand_1 = comand_1[len(comand_1)-2]
+                    else:
+                        comand_1 = comand_1[len(comand_1)-1]
+                else:
+                    comand_2 = comand_2.split()
+                    print(f"SPLITTED_2 : {comand_2}")
+                    comand_2 = comand_2[0]
+                result['comand_1'] = comand_1           
+                result['comand_2'] = comand_2
+                chance1 = chances[random.randint(0,6)]
                 chance2 = 100 - chance1
                 result['chance1'] = chance1
                 result['chance2'] = chance2
 
                 if chance1 > chance2:
-                    result['final'] = f'Мы рекомендуем ставить на {match['detail'].split('-')[0]}!'
+                    result['final'] = f'Мы рекомендуем ставить на <b>{comand_1}</b>!'
                 else:
-                    result['final'] = f'Мы рекомендуем ставить на {match['detail'].split('-')[1]}!'
+                    result['final'] = f'Мы рекомендуем ставить на <b>{comand_2}</b>!'
         return result
 
         
 
 show_stavka_dialog = Dialog(
     Window(
-        Format('Матч: <b>{match}</b>'),
-        Const('*******************************'),
-        Format('Команда 1: {comand_1}, шанс победы: {chance1}'),                                        
-        Format('Команда 2: {comand_2}, шанс победы: {chance2}'),
-        Format('{final}'),
+        Format('⚽️ Матч: <b>{match}</b>\n'),
+        Format('💫Команда 1: <b>{comand_1}</b>\n🔎Шанс победы: <b>{chance1}%</b>\n'),                                        
+        Format('💫Команда 2: <b>{comand_2}</b>\n🔎Шанс победы: <b>{chance2}%</b>\n'),
+        Format('<b>{final}</b>'),
         Button(Const('◀️ Назад'),id='back',on_click=to_bet),
         state=states.ShowStavkaSG.show_stavka,
         getter=stavka_getter_by_id
