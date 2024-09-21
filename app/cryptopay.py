@@ -2,8 +2,9 @@ from aiogram import Bot
 import app.database.requests as req
 import asyncio
 import requests
+import config
 
-CRYPTOPAY_TOKEN = "251800:AALOUYSmX2KNjpV92qkNQYx95Il7qqJHvi5"
+CRYPTOPAY_TOKEN = config.CRYPTOPAY_API_TOKEN
 
 async def create_invoice(amount, user_id):
     headers = {"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN}

@@ -19,7 +19,12 @@ class User(Base):
     subscribe = Column(Integer)
     current_stavka = Column(Integer)
 
+class Promocode(Base):
+    __tablename__ = 'promocodes'
 
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    telegram_id = Column(String)
+    promocode = Column(String)
 
 
 async def init_models():

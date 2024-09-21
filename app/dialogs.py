@@ -72,12 +72,40 @@ async def add_balance_handler(message: Message, widget: ManagedTextInput, dialog
     await dialog_manager.start(state=states.BalanceSG.pull_balance)
 
     
+promocodes_1 = ['xYzQpRt', 'aBcDrLM', 'jKlMnOp', 'qRsTuVw', 'zXyAbCd', 'pQrStUv', 'mNoPqRs', 'eFgHiJk', 'tUvWxYz', 'aBcDsKl']
+promocodes_3 = ['kLmNoPq', 'rStUvWx', 'xYzAbCd', 'jKlMKTy', 'pQrQoBa', 'eFgTcHk', 'tUvFgKla', 'aBcDaSm', 'mNoGkLw', 'qRsTDfg']
+promocodes_5 = ['zXyAbCd', 'kLmGep', 'rStUQdh', 'xYzMNt', 'jKlMGnM', 'pQrQeTa', 'eFgMeHT', 'tUvQjLaS', 'aBcKoP', 'mNoPbWk']
 async def check_promo_handler(message: Message, widget: ManagedTextInput, dialog_manager: DialogManager, text: str):
-    if text == 'promocode':
-        await message.answer("Вы ввели промокод!")
+    if text in promocodes_1:
+        is_activated = await requests.check_promocode(message.from_user.id, message.text)
+        if is_activated:
+            await message.answer("Вы уже ввели данный промокод!")
+            await dialog_manager.start(state=states.MenuSG.menu)
+            return
+        await requests.add_promocode(message.from_user.id, message.text)
+        await requests.add_subscribe(message.from_user.id, 1)
+        await message.answer("<b>Вы получили 1 бесплатную игру!</b>")
+    elif text in promocodes_3:
+        is_activated = await requests.check_promocode(message.from_user.id, message.text)
+        if is_activated:
+            await message.answer("Вы уже ввели данный промокод!")
+            await dialog_manager.start(state=states.MenuSG.menu)
+            return
+        await requests.add_promocode(message.from_user.id, message.text)
+        await requests.add_subscribe(message.from_user.id, 3)
+        await message.answer("<b>Вы получили 3 бесплатных игр!</b>")
+    elif text in promocodes_5:
+        is_activated = await requests.check_promocode(message.from_user.id, message.text)
+        if is_activated:
+            await message.answer("Вы уже ввели данный промокод!")
+            await dialog_manager.start(state=states.MenuSG.menu)
+            return
+        await requests.add_promocode(message.from_user.id, message.text)
+        await requests.add_subscribe(message.from_user.id, 5)
+        await message.answer("<b>Вы получили 5 бесплатных игр!</b>")
     else:
         await message.answer('Такого промокода нет!.')
-    await dialog_manager.start(state=states.PromoSG.promo)
+    await dialog_manager.start(state=states.MenuSG.menu)
 
 async def subscribe1_handler(callback: CallbackQuery, widget: ManagedTextInput, dialog_manager: DialogManager):
     user_balance = await requests.check_balance(callback.from_user.id)
@@ -192,7 +220,7 @@ pull_balance_dialog = Dialog(
 
 help_dialog = Dialog (
     Window(
-        Const(text='По любым вопросам пишите в поддержку.\n<b>Поддержка:</b> @nmaeers'),
+        Const(text='Поддержка: https://t.me/betting_bot_support'),
         Button(Const('◀️ Назад'),id='back',on_click=to_menu,),
         state=states.HelpSG.help
     ),
@@ -201,7 +229,7 @@ help_dialog = Dialog (
 
 instruction_dialog = Dialog (
     Window(
-        Const(text='Инструкция: <b>инструкция</b>'),
+        Const(text='Инструкция:\nhttps://telegra.ph/Instrukciya-kak-polzovatsya-football-predict-bot-09-21'),
         Button(Const('◀️ Назад'),id='back',on_click=to_menu),
         state=states.InstructionSG.instruction
     ),
